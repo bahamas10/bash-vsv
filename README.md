@@ -8,6 +8,46 @@ to `sv` as `vpm` is to the `xbps-*` commands.
 
 See my blog post on `vsv` here: https://www.daveeddy.com/2018/09/20/vsv-void-service-manager/
 
+Installation
+------------
+
+`vsv` is a standalone bash script that can be dumped anywhere in your `$PATH`
+to be used.
+
+### `git`
+
+I personally install it with `git` (with `~/bin` in my `$PATH`):
+
+    mkdir -p ~/bin ~/dev
+    cd ~/dev
+    git clone git://github.com/bahamas10/vsv.git
+    ln -s ~/dev/vsv/vsv ~/bin
+
+### `curl` or `wget`
+
+You can use `curl` or `wget` to pull the script directly from GitHub:
+
+    mkdir -p ~/bin
+    cd ~/bin
+    wget https://raw.githubusercontent.com/bahamas10/vsv/master/vsv
+    # or
+    curl -O https://raw.githubusercontent.com/bahamas10/vsv/master/vsv
+    # and then
+    chmod +x ~/bin/vsv
+
+### `Makefile`
+
+You can use the Makefile in this repo:
+
+    $ sudo make install
+    Password:
+    cp ./vsv /usr/local/bin
+
+And uninstall with:
+
+    $ sudo make uninstall
+    rm -f /usr/local/bin/vsv
+
 Examples
 --------
 
@@ -69,31 +109,6 @@ All of the commands and options are supported when `-u` or `-d <dir>` is
 specified.
 
 ![vsv-user-tree.png](screenshots/vsv-user-tree.png)
-
-Installation
-------------
-
-`vsv` is a standalone bash script that can be dumped anywhere in your `$PATH`
-to be used.
-
-I personally install it with `git` (with `~/bin` in my `$PATH`):
-
-    mkdir -p ~/bin ~/dev
-    cd ~/dev
-    git clone git://github.com/bahamas10/vsv.git
-    ln -s ~/dev/vsv/vsv ~/bin
-
-Otherwise, you can use `curl` or `wget` to pull the script directly from GitHub:
-
-    mkdir -p ~/bin
-    cd ~/bin
-    wget https://raw.githubusercontent.com/bahamas10/vsv/master/vsv
-    # or
-    curl -O https://raw.githubusercontent.com/bahamas10/vsv/master/vsv
-
-And then:
-
-    chmod +x ~/bin/vsv
 
 Usage
 -----
