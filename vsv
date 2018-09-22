@@ -1,0 +1,438 @@
+#!/usr/bin/env bash
+#
+# Void Liunx service manager (runit)
+#
+# Author: Dave Eddy <dave@daveeddy.com>
+# Date: August 29, 2018
+# License: MIT
+
+VSV_VERSION='v1.0.0'
+
+export SVDIR=${SVDIR:-/var/service}
+
+charup='✔'
+chardown='X'
+charunknown='?'
+progname=${0##*/}
+num_re='^-?[0-9]+$'
+svc_re='^[a-zA-Z0-9_\.-]+$'
+
+shopt -s nullglob
+
+# Get time in a human format, like 1 hour ago, 7 minutes ago, etc.
+human() {
+	local seconds=$1
+	if ((seconds < 0)); then
+		((seconds *= -1))
+	fi
+
+	local times=(
+		$((seconds / 60 / 60 / 24 / 365)) # years
+		$((seconds / 60 / 60 / 24 / 30))  # months
+		$((seconds / 60 / 60 / 24 / 7))   # weeks
+		$((seconds / 60 / 60 / 24))       # days
+		$((seconds / 60 / 60))            # hours
+		$((seconds / 60))                 # minutes
+		$((seconds))                      # seconds
+	)
+	local names=(year month week day hour minute second)
+
+	local i
+	for ((i = 0; i < ${#names[@]}; i++)); do
+		if ((${times[$i]} > 1)); then
+			echo "${times[$i]} ${names[$i]}s"
+			return
+		elif ((${times[$i]} == 1)); then
+			echo "${times[$i]} ${names[$i]}"
+			return
+		fi
+	done
+	echo '0 seconds'
+}
+
+# enable or disable colors based on the argument given, i.e.:
+# setcolors on   # colors on
+# setcolors off  # colors off
+# setcolors auto # colors on or off depending on environment
+_colorsSet=false
+setcolors() {
+	local opt=$1
+
+	# determine if colors should be enabled or not
+	if [[ $opt == auto ]]; then
+		# if stdout is a TTY and the TERM looks like it supports color
+		# enable colors
+		if [[ -t 1 && $TERM == *color* ]]; then
+			opt='on'
+		else
+			opt='off'
+		fi
+	fi
+
+	case "$opt" in
+		on|yes|true)
+			colorred=$(tput setaf 1)
+			colorgreen=$(tput setaf 2)
+			coloryellow=$(tput setaf 3)
+			colorblue=$(tput setaf 4)
+			colormagenta=$(tput setaf 5)
+			colorcyan=$(tput setaf 6)
+			#colorwhite=$(tput setaf 7)
+			colorgray=$(tput setaf 8)
+			colorbold=$(tput bold)
+			colorreset=$(tput sgr0)
+			;;
+		off|no|false)
+			colorred=
+			colorgreen=
+			coloryellow=
+			colormagenta=
+			colorcyan=
+			#colorwhite=
+			colorgray=
+			colorbold=
+			colorreset=
+			;;
+		*)
+			echo "unknown color option: '$opt'" >&2
+			exit 1
+			;;
+	esac
+	_colorsSet=true
+}
+
+usage() {
+	local cr=$colorreset
+	local logo
+
+	logo=$(getlogo)
+
+	cat <<EOF
+$colormagenta __   _______   __
+$colormagenta \\ \\ / / __\\ \\ / /  $colorgreen Void Service Manager ($VSV_VERSION)
+$colormagenta  \\ V /\\__ \\\\ V /   $colorgreen Source: https://github.com/bahamas10/vsv
+$colormagenta   \\_/ |___/ \\_/    $colorgreen MIT License
+
+$logo   $colorblue Manage and view runit services
+$logo   $colorblue Made specifically for Void Linux but should work anywhere
+$logo   $colorblue Author: Dave Eddy <dave@daveeddy.com> (bahamas10)
+
+${coloryellow}USAGE:${colorgreen}
+$progname [OPTIONS] [SUBCOMMAND] [<ARGS>]
+$progname [-u] [-d <dir>] [-h] [-t] [SUBCOMMAND] [...]
+
+${coloryellow}OPTIONS:${colorgreen}
+${colorgreen}-c <yes|no|auto>         $cr Enable/disable color output, defaults to auto
+${colorgreen}-d <dir>                 $cr Directory to look into, defaults to env SVDIR or /var/service if unset
+${colorgreen}-h                       $cr Print this message and exit
+${colorgreen}-t                       $cr Tree view, this is a shortcut for 'status -t'
+${colorgreen}-u                       $cr User mode, this is a shortcut for '-d ~/runit/service'
+${colorgreen}-v                       $cr Increase verbosity
+
+${coloryellow}ENV:${colorgreen}
+SVDIR                    $cr The directory to use, passed to the 'sv' command, can
+                          be overridden with '-d <dir>'
+
+${coloryellow}SUBCOMMANDS:${colorgreen}
+status [-t] [filter]     $cr Default subcommand, show process status
+			 $cr '-t' enables tree mode (process tree)
+			 $cr 'filter' is an optional string to match service names against
+
+Any other subcommand gets passed directly to the 'sv' command, see sv(1) for the
+full list of subcommands and information about what each does specifically.
+Common subcommands:
+
+${colorgreen}start <service>          $cr Start the service
+${colorgreen}stop <service>           $cr Stop the service
+${colorgreen}restart <service>        $cr Restart the service
+${colorgreen}reload <service>         $cr Reload the service (send SIGHUP)
+
+${coloryellow}EXAMPLES:${colorgreen}
+${colorgreen}$progname                      $cr Show service status in /var/service
+${colorgreen}$progname status               $cr Same as above
+${colorgreen}$progname -t                   $cr Show service status + pstree output
+${colorgreen}$progname status -t            $cr Same as above
+${colorgreen}$progname status tty           $cr Show service status for any service that matches *ssh*
+${colorgreen}$progname check uuidd          $cr Check the uuidd svc, wrapper for 'sv check uuidd'
+${colorgreen}$progname restart sshd         $cr Restart sshd, wrapper for 'sv restart sshd'
+${colorgreen}$progname -u                   $cr Show service status in ~/runit/service
+${colorgreen}$progname -u restart ssh-agent $cr Restart ssh-agent in ~/runit/service/ssh-agent
+EOF
+}
+
+verbose() {
+	if ((verbosity > 0)); then
+		echo '>' "$colorgray" "$@" "$colorreset" >&2
+	fi
+}
+
+# print the logo with brackets colorized
+getlogo() {
+	printf '%s[%s%s%s]%s' \
+	    "$colorcyan" \
+	    "$colormagenta" "$progname" \
+	    "$colorcyan" \
+	    "$colorreset"
+}
+
+# prints a message
+msg() {
+	local logo
+
+	logo=$(getlogo)
+
+	echo "$logo" "$colorblue$*$colorreset"
+}
+
+# prints a fatal message and exists
+fatal() {
+	echo "${colorred}FATAL:" "$@" "$colorreset"
+	exit 2
+}
+
+# rmsg - same as msg but colorized based on return status passed via $1
+rmsg() {
+	local code=$1
+	local logo
+	local statuscolor
+
+	shift
+
+	logo=$(getlogo)
+
+	if ((code == 0)); then
+		statuscolor=$colorgreen
+	else
+		statuscolor=$colorred
+	fi
+
+	echo "$logo" "$statuscolor$*$colorreset"
+}
+
+# handle the status subcommand
+do_status() {
+	local OPTIND option
+	local d
+	local logo
+	local svcs=()
+
+	logo=$(getlogo)
+
+	while getopts 'ht' option; do
+		case "$option" in
+			h) usage; exit 0;;
+			t) tree=true;;
+			*) usage; exit 1;;
+		esac
+	done
+	shift "$((OPTIND - 1))"
+
+	local filter=$1
+
+	# loop service directories
+	for d in ./*/; do
+		d=${d%/}
+		svc=${d##*/}
+
+		# this is us being a little over-protective here
+		if ! [[ $svc =~ $svc_re ]]; then
+			rmsg -1 "unexpected characters in name: '$svc'" >&2
+			continue
+		fi
+
+		if [[ ! -d $svc/supervise ]]; then
+			verbose "skipping $svc - '$svc/supervise' not found"
+			continue
+		fi
+
+		if [[ -n $filter && $svc != *"$filter"* ]]; then
+			verbose "filtering out '$svc' because match '$filter'"
+			continue
+		fi
+
+		svcs+=("$svc")
+	done
+
+
+	# print title if verbose
+	if ((verbosity > 0)); then
+		# service count
+		local services
+		local count=${#svcs[@]}
+
+		if ((count == 1)); then
+			services='service'
+		else
+			services='services'
+		fi
+
+		printf '%s> %s %s-%s %s%s %s(%s%s%s)%s %s-%s %s%d %s%s\n' \
+		    "$colorgray" "$logo" \
+		    "$colorgray" "$colorreset" \
+		    "$colorblue" "$HOSTNAME" \
+		    "$colorcyan" "$colorgreen" "${PWD/#$HOME/\~}" \
+		    "$colorcyan" "$colorreset" \
+		    "$colorgray" "$colorreset" \
+		    "$colorblue" "$count" "$services" "$colorreset"
+	fi
+	echo
+
+	# table header
+	printf '%s   %-20s %-7s %-9s %-8s %s%s\n' \
+	    "$colorbold" \
+	    'SERVICE' 'STATE' 'ENABLED' 'PID' 'TIME' \
+	    "$colorreset"
+
+	local now pid when up msg char err enabled msgcolor enabledcolor \
+	    statecolor code
+
+	# loop services
+	printf -v now '%(%s)T' -1
+	for svc in "${svcs[@]}"; do
+		# check permissions effectively
+		err=$(sv status "$svc" 2>&1)
+		code=$?
+
+		# get service state, or set error messages
+		if ((code == 0)); then
+			err=
+			state=$(< "$svc/supervise/stat")
+			pid=$(< "$svc/supervise/pid")
+			when=$(stat --printf %Y "$svc/supervise/pid")
+			up=$((now - when))
+			msg=$(human "$up")
+
+			# if the service is enabled (wants up or wants down)
+			if [[ -e $svc/down ]]; then
+				enabled='false'
+			else
+				enabled='true'
+			fi
+
+			# color time if the service hasn't been up long
+			if ((up < 5)); then
+				msgcolor=$colorred
+			elif ((up < 30)); then
+				msgcolor=$coloryellow
+			else
+				msgcolor=$colorgray
+			fi
+		else
+			pid=
+			enabled=
+			state='n/a'
+			msg=${err##*: }
+			msgcolor=$colorred
+		fi
+
+		# sanity check pid
+		if [[ -n $pid ]] && ! [[ $pid =~ $num_re ]]; then
+			fatal "invalid pid: '$pid'"
+		fi
+
+		# figure out character and color to use for status
+		if [[ -n $err ]]; then
+			char=$charunknown
+			statecolor=$coloryellow
+		elif [[ $state == 'run' ]]; then
+			char=$charup
+			statecolor=$colorgreen
+		else
+			char=$chardown
+			statecolor=$colorred
+		fi
+
+		# figure out enabled color
+		if [[ $enabled == 'true' ]]; then
+			enabledcolor=$colorgreen
+		elif [[ $enabled == 'false' ]]; then
+			enabledcolor=$colorred
+		else
+			enabledcolor=$coloryellow
+		fi
+
+		# msg color
+		if [[ -z $msgcolor ]]; then
+			msgcolor=$colorgray
+		fi
+
+		# print service line
+		printf ' %s%s%s %s%-20s%s %s%-7s%s %s%-9s%s %s%-8s%s %s%s%s\n' \
+		    "$statecolor"   "$char"           "$colorreset" \
+		    "$colorreset"   "$svc"            "$colorreset" \
+		    "$statecolor"   "$state"          "$colorreset" \
+		    "$enabledcolor" "${enabled:----}" "$colorreset" \
+		    "$colormagenta" "${pid:----}"     "$colorreset" \
+		    "$msgcolor"     "$msg"            "$colorreset"
+
+		# optionally print the pstree
+		if $tree; then
+			if ((pid > 0)); then
+				echo "$colorgray"
+				pstree -ac "$pid"
+			fi
+			echo "$colorreset"
+		fi
+	done
+	echo
+}
+
+# handle any other subcommand
+do_sv_cmd() {
+	if (($# < 2)); then
+		rmsg -1 "Argument expected for 'sv $1'"
+		return 1
+	fi
+
+	msg "Running sv command (SVDIR=$SVDIR sv $*):"
+	sv "$@"
+	local ret=$?
+	rmsg "$ret" "[sv $*], exit code: $ret"
+	return "$ret"
+}
+
+tree=false
+do_usage=-1
+verbosity=0
+while getopts 'c:d:htuv' option; do
+	case "$option" in
+		c) setcolors "$OPTARG";;
+		d) SVDIR=$OPTARG;;
+		h) do_usage=0;;
+		t) tree=true; cmd='status';;
+		u) SVDIR=~/runit/service;;
+		v) ((verbosity++));;
+                *) do_usage=1;;
+	esac
+done
+shift "$((OPTIND - 1))"
+
+$_colorsSet || setcolors auto
+
+# we wait until the colors are optionally set to output the usage message
+if ((do_usage > -1)); then
+	usage
+	exit "$do_usage"
+fi
+
+# move to the service directory
+cd "$SVDIR" || fatal "failed to enter dir: $SVDIR"
+
+# figure out 'cmd' command
+if [[ -z $cmd ]]; then
+	cmd=${1:-status}
+	shift
+fi
+
+case "$cmd" in
+	status)
+		do_status "$@"
+		;;
+	*)
+		if $tree; then
+			rmsg -1 "-t can only be specified with 'status'"
+			exit 1
+		fi
+		do_sv_cmd "$cmd" "$@"
+		;;
+esac
