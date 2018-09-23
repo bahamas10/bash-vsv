@@ -128,6 +128,7 @@ ${colorgreen}-h                       $cr Print this message and exit
 ${colorgreen}-t                       $cr Tree view, this is a shortcut for 'status -t'
 ${colorgreen}-u                       $cr User mode, this is a shortcut for '-d ~/runit/service'
 ${colorgreen}-v                       $cr Increase verbosity
+${colorgreen}-V                       $cr Print the version number and exit
 
 ${coloryellow}ENV:${colorgreen}
 SVDIR                    $cr The directory to use, passed to the 'sv' command, can
@@ -394,7 +395,7 @@ do_sv_cmd() {
 tree=false
 do_usage=-1
 verbosity=0
-while getopts 'c:d:htuv' option; do
+while getopts 'c:d:htuvV' option; do
 	case "$option" in
 		c) setcolors "$OPTARG";;
 		d) SVDIR=$OPTARG;;
@@ -402,7 +403,8 @@ while getopts 'c:d:htuv' option; do
 		t) tree=true; cmd='status';;
 		u) SVDIR=~/runit/service;;
 		v) ((verbosity++));;
-                *) do_usage=1;;
+		V) echo "$VSV_VERSION"; exit 0;;
+		*) do_usage=1;;
 	esac
 done
 shift "$((OPTIND - 1))"

@@ -126,7 +126,7 @@ Command Usage:
 
     $ vsv -h
      __   _______   __
-     \ \ / / __\ \ / /   Void Service Manager
+     \ \ / / __\ \ / /   Void Service Manager (v1.0.0)
       \ V /\__ \\ V /    Source: https://github.com/bahamas10/vsv
        \_/ |___/ \_/     MIT License
 
@@ -145,6 +145,7 @@ Command Usage:
     -t                        Tree view, this is a shortcut for 'status -t'
     -u                        User mode, this is a shortcut for '-d ~/runit/service'
     -v                        Increase verbosity
+    -V                        Print the version number and exit
 
     ENV:
     SVDIR                     The directory to use, passed to the 'sv' command, can
