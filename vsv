@@ -217,7 +217,7 @@ process_service() {
 	local svc=$1
 	local now=$2
 	local pid when up msg char err enabled msgcolor enabledcolor \
-	    statecolor code islog
+	    statecolor code islog prog
 
 	islog=false
 	if [[ $svc == */log ]]; then
@@ -296,18 +296,24 @@ process_service() {
 		svc='- log'
 	fi
 
+	# figure out program name
+	if [[ -n $pid ]]; then
+		IFS= read -d $'\0' -r prog _ < /proc/$pid/cmdline
+	fi
+
 	# print service line
-	printf ' %s%s%s %s%-20s%s %s%-7s%s %s%-9s%s %s%-8s%s %s%s%s\n' \
+	printf ' %s%s%s %s%-20s%s %s%-7s%s %s%-9s%s %s%-8s%s %s%-17s%s %s%s%s\n' \
 	    "$statecolor"   "$char"           "$colorreset" \
 	    "$colorreset"   "$svc"            "$colorreset" \
 	    "$statecolor"   "$state"          "$colorreset" \
 	    "$enabledcolor" "${enabled:----}" "$colorreset" \
 	    "$colormagenta" "${pid:----}"     "$colorreset" \
+	    "$colorgreen"   "${prog:----}"    "$colorreset" \
 	    "$msgcolor"     "$msg"            "$colorreset"
 
 	# optionally print the pstree
 	if $tree; then
-		if ((pid > 0)); then
+		if [[ -n $pid ]] && ((pid > 0)); then
 			echo "$colorgray"
 			pstree -ac "$pid"
 		fi
@@ -386,9 +392,9 @@ do_status() {
 	echo
 
 	# table header
-	printf '%s   %-20s %-7s %-9s %-8s %s%s\n' \
+	printf '%s   %-20s %-7s %-9s %-8s %-17s %s%s\n' \
 	    "$colorbold" \
-	    'SERVICE' 'STATE' 'ENABLED' 'PID' 'TIME' \
+	    'SERVICE' 'STATE' 'ENABLED' 'PID' 'COMMAND' 'TIME' \
 	    "$colorreset"
 
 	# loop services

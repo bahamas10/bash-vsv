@@ -5,6 +5,7 @@ Not Yet Released
 ----------------
 
 - Add `-l` to status to show log processes
+- Add `COMMAND` to output (first arg of `cmdline`)
 
 `v1.1.0`
 --------
