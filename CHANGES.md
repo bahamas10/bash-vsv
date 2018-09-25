@@ -4,6 +4,8 @@ vsv Changes
 Not Yet Released
 ----------------
 
+- Add `-l` to status to show log processes
+
 `v1.1.0`
 --------
 

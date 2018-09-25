@@ -125,6 +125,7 @@ ${coloryellow}OPTIONS:${colorgreen}
 ${colorgreen}-c <yes|no|auto>         $cr Enable/disable color output, defaults to auto
 ${colorgreen}-d <dir>                 $cr Directory to look into, defaults to env SVDIR or /var/service if unset
 ${colorgreen}-h                       $cr Print this message and exit
+${colorgreen}-l                       $cr Show log processes, this is a shortcut for 'status -l'
 ${colorgreen}-t                       $cr Tree view, this is a shortcut for 'status -t'
 ${colorgreen}-u                       $cr User mode, this is a shortcut for '-d ~/runit/service'
 ${colorgreen}-v                       $cr Increase verbosity
@@ -135,8 +136,9 @@ SVDIR                    $cr The directory to use, passed to the 'sv' command, c
                           be overridden with '-d <dir>'
 
 ${coloryellow}SUBCOMMANDS:${colorgreen}
-status [-t] [filter]     $cr Default subcommand, show process status
+status [-lt] [filter]    $cr Default subcommand, show process status
 			 $cr '-t' enables tree mode (process tree)
+			 $cr '-l' enables log mode (show log processes)
 			 $cr 'filter' is an optional string to match service names against
 
 Any other subcommand gets passed directly to the 'sv' command, see sv(1) for the
@@ -210,18 +212,122 @@ rmsg() {
 	echo "$logo" "$statuscolor$*$colorreset"
 }
 
+# process the status of a single service
+process_service() {
+	local svc=$1
+	local now=$2
+	local pid when up msg char err enabled msgcolor enabledcolor \
+	    statecolor code islog
+
+	islog=false
+	if [[ $svc == */log ]]; then
+		islog=true
+	fi
+
+	# check permissions effectively
+	err=$(sv status "$svc" 2>&1)
+	code=$?
+
+	# get service state, or set error messages
+	if ((code == 0)); then
+		err=
+		state=$(< "$svc/supervise/stat")
+		pid=$(< "$svc/supervise/pid")
+		when=$(stat --printf %Y "$svc/supervise/pid")
+		up=$((now - when))
+		msg=$(human "$up")
+
+		# if the service is enabled (wants up or wants down)
+		if [[ -e $svc/down ]]; then
+			enabled='false'
+		else
+			enabled='true'
+		fi
+
+		# color time if the service hasn't been up long
+		if ((up < 5)); then
+			msgcolor=$colorred
+		elif ((up < 30)); then
+			msgcolor=$coloryellow
+		else
+			msgcolor=$colorgray
+		fi
+	else
+		pid=
+		enabled=
+		state='n/a'
+		msg=${err##*: }
+		msgcolor=$colorred
+	fi
+
+	# sanity check pid
+	if [[ -n $pid ]] && ! [[ $pid =~ $num_re ]]; then
+		fatal "invalid pid: '$pid'"
+	fi
+
+	# figure out character and color to use for status
+	if [[ -n $err ]]; then
+		char=$charunknown
+		statecolor=$coloryellow
+	elif [[ $state == 'run' ]]; then
+		char=$charup
+		statecolor=$colorgreen
+	else
+		char=$chardown
+		statecolor=$colorred
+	fi
+
+	# figure out enabled color
+	if [[ $enabled == 'true' ]]; then
+		enabledcolor=$colorgreen
+	elif [[ $enabled == 'false' ]]; then
+		enabledcolor=$colorred
+	else
+		enabledcolor=$coloryellow
+	fi
+
+	# msg color
+	if [[ -z $msgcolor ]]; then
+		msgcolor=$colorgray
+	fi
+
+	# format service name if it is a log service
+	if $log && $islog && ! $tree; then
+		svc='- log'
+	fi
+
+	# print service line
+	printf ' %s%s%s %s%-20s%s %s%-7s%s %s%-9s%s %s%-8s%s %s%s%s\n' \
+	    "$statecolor"   "$char"           "$colorreset" \
+	    "$colorreset"   "$svc"            "$colorreset" \
+	    "$statecolor"   "$state"          "$colorreset" \
+	    "$enabledcolor" "${enabled:----}" "$colorreset" \
+	    "$colormagenta" "${pid:----}"     "$colorreset" \
+	    "$msgcolor"     "$msg"            "$colorreset"
+
+	# optionally print the pstree
+	if $tree; then
+		if ((pid > 0)); then
+			echo "$colorgray"
+			pstree -ac "$pid"
+		fi
+		echo "$colorreset"
+	fi
+}
+
 # handle the status subcommand
 do_status() {
 	local OPTIND option
 	local d
 	local logo
+	local now
 	local svcs=()
 
 	logo=$(getlogo)
-
-	while getopts 'ht' option; do
+	while getopts 'hlt' option; do
 		case "$option" in
 			h) usage; exit 0;;
+			l) log=true;;
 			t) tree=true;;
 			*) usage; exit 1;;
 		esac
@@ -252,6 +358,7 @@ do_status() {
 		fi
 
 		svcs+=("$svc")
+		$log && svcs+=("$svc/log")
 	done
 
 
@@ -284,96 +391,10 @@ do_status() {
 	    'SERVICE' 'STATE' 'ENABLED' 'PID' 'TIME' \
 	    "$colorreset"
 
-	local now pid when up msg char err enabled msgcolor enabledcolor \
-	    statecolor code
-
 	# loop services
 	printf -v now '%(%s)T' -1
 	for svc in "${svcs[@]}"; do
-		# check permissions effectively
-		err=$(sv status "$svc" 2>&1)
-		code=$?
-
-		# get service state, or set error messages
-		if ((code == 0)); then
-			err=
-			state=$(< "$svc/supervise/stat")
-			pid=$(< "$svc/supervise/pid")
-			when=$(stat --printf %Y "$svc/supervise/pid")
-			up=$((now - when))
-			msg=$(human "$up")
-
-			# if the service is enabled (wants up or wants down)
-			if [[ -e $svc/down ]]; then
-				enabled='false'
-			else
-				enabled='true'
-			fi
-
-			# color time if the service hasn't been up long
-			if ((up < 5)); then
-				msgcolor=$colorred
-			elif ((up < 30)); then
-				msgcolor=$coloryellow
-			else
-				msgcolor=$colorgray
-			fi
-		else
-			pid=
-			enabled=
-			state='n/a'
-			msg=${err##*: }
-			msgcolor=$colorred
-		fi
-
-		# sanity check pid
-		if [[ -n $pid ]] && ! [[ $pid =~ $num_re ]]; then
-			fatal "invalid pid: '$pid'"
-		fi
-
-		# figure out character and color to use for status
-		if [[ -n $err ]]; then
-			char=$charunknown
-			statecolor=$coloryellow
-		elif [[ $state == 'run' ]]; then
-			char=$charup
-			statecolor=$colorgreen
-		else
-			char=$chardown
-			statecolor=$colorred
-		fi
-
-		# figure out enabled color
-		if [[ $enabled == 'true' ]]; then
-			enabledcolor=$colorgreen
-		elif [[ $enabled == 'false' ]]; then
-			enabledcolor=$colorred
-		else
-			enabledcolor=$coloryellow
-		fi
-
-		# msg color
-		if [[ -z $msgcolor ]]; then
-			msgcolor=$colorgray
-		fi
-
-		# print service line
-		printf ' %s%s%s %s%-20s%s %s%-7s%s %s%-9s%s %s%-8s%s %s%s%s\n' \
-		    "$statecolor"   "$char"           "$colorreset" \
-		    "$colorreset"   "$svc"            "$colorreset" \
-		    "$statecolor"   "$state"          "$colorreset" \
-		    "$enabledcolor" "${enabled:----}" "$colorreset" \
-		    "$colormagenta" "${pid:----}"     "$colorreset" \
-		    "$msgcolor"     "$msg"            "$colorreset"
-
-		# optionally print the pstree
-		if $tree; then
-			if ((pid > 0)); then
-				echo "$colorgray"
-				pstree -ac "$pid"
-			fi
-			echo "$colorreset"
-		fi
+		process_service "$svc" "$now"
 	done
 	echo
 }
@@ -393,13 +414,15 @@ do_sv_cmd() {
 }
 
 tree=false
+log=false
 do_usage=-1
 verbosity=0
-while getopts 'c:d:htuvV' option; do
+while getopts 'c:d:hltuvV' option; do
 	case "$option" in
 		c) setcolors "$OPTARG";;
 		d) SVDIR=$OPTARG;;
 		h) do_usage=0;;
+		l) log=true; cmd='status';;
 		t) tree=true; cmd='status';;
 		u) SVDIR=~/runit/service;;
 		v) ((verbosity++));;
@@ -433,6 +456,10 @@ case "$cmd" in
 	*)
 		if $tree; then
 			rmsg -1 "-t can only be specified with 'status'"
+			exit 1
+		fi
+		if $log; then
+			rmsg -1 "-l can only be specified with 'status'"
 			exit 1
 		fi
 		do_sv_cmd "$cmd" "$@"
