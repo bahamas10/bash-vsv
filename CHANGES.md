@@ -4,6 +4,9 @@ vsv Changes
 Not Yet Released
 ----------------
 
+`v1.2.0`
+--------
+
 - Add `-l` to status to show log processes
 - Add `COMMAND` to output (first arg of `cmdline`)
 
