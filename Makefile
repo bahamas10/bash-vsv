@@ -6,7 +6,7 @@ all:
 
 .PHONY: install
 install:
-	cp ./vsv $(PREFIX)/bin/vsv
+	cp vsv $(PREFIX)/bin/vsv
 
 .PHONY: uninstall
 uninstall:

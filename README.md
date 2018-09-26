@@ -8,6 +8,8 @@ to `sv` as `vpm` is to the `xbps-*` commands.
 
 See my blog post on `vsv` here: https://www.daveeddy.com/2018/09/20/vsv-void-service-manager/
 
+![vsv-status.png](screenshots/vsv-status.png)
+
 Installation
 ------------
 
@@ -40,8 +42,7 @@ You can use `curl` or `wget` to pull the script directly from GitHub:
 You can use the Makefile in this repo:
 
     $ sudo make install
-    Password:
-    cp ./vsv /usr/local/bin
+    cp vsv /usr/local/bin
 
 And uninstall with:
 
@@ -50,6 +51,9 @@ And uninstall with:
 
 Examples
 --------
+
+**Note:** Some screenshots are outdated or command output may have changed
+slightly in newer versions of `vsv`.
 
 Run `vsv` without any arguments to get process status.  This is equivalent to
 running `vsv status`:
@@ -91,6 +95,17 @@ to running `vsv status -t`:
 
 ![vst-tree-large.png](screenshots/vst-tree-large.png)
 
+`-l` can be specified to view log services for each service as well.  This
+command is equivalent to running `vsv status -l virt`:
+
+![vsv-log.png](screenshots/vsv-log.png)
+
+`-t` can be specified with `-l` to view log services as a tree for each service
+as well as normal services.  This command is equivalent to running `vsv status
+-tl virt`:
+
+![vsv-log-tree.png](screenshots/vsv-log-tree.png)
+
 `vsv` also first-classes the notion of "user services".  I wrote about this in
 my blog post for [Using Linux As My Daily
 Driver](https://www.daveeddy.com/2018/09/15/using-void-linux-as-my-daily-driver/)
@@ -121,6 +136,17 @@ Quick Examples:
 - `vsv start <svc>` - start a service
 - `vsv restart <svc>` - restart a service
 - `vsv hup <svc>` - refresh a service (`SIGHUP`)
+
+Status:
+
+The `status` subcommand has the following fields:
+
+- `SERVICE` - the service (directory) name.
+- `STATE` - the service state: output from `.../$service/supervise/stat`.
+- `ENABLED` - if the service is enabled (lacks the `.../$service/down` file).
+- `PID` - the pid of the process being monitored.
+- `COMMAND` - arg0 from the pid being monitored (first field of `/proc/$pid/cmdline`.
+- `TIME` - time the service has been in whatever state it is in.
 
 Command Usage:
 
