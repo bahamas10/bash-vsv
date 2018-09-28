@@ -155,7 +155,7 @@ ${colorgreen}$progname                      $cr Show service status in /var/serv
 ${colorgreen}$progname status               $cr Same as above
 ${colorgreen}$progname -t                   $cr Show service status + pstree output
 ${colorgreen}$progname status -t            $cr Same as above
-${colorgreen}$progname status tty           $cr Show service status for any service that matches *ssh*
+${colorgreen}$progname status tty           $cr Show service status for any service that matches tty*
 ${colorgreen}$progname check uuidd          $cr Check the uuidd svc, wrapper for 'sv check uuidd'
 ${colorgreen}$progname restart sshd         $cr Restart sshd, wrapper for 'sv restart sshd'
 ${colorgreen}$progname -u                   $cr Show service status in ~/runit/service

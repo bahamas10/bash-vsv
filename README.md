@@ -196,7 +196,7 @@ Command Usage:
     vsv status                Same as above
     vsv -t                    Show service status + pstree output
     vsv status -t             Same as above
-    vsv status tty            Show service status for any service that matches *ssh*
+    vsv status tty            Show service status for any service that matches *tty*
     vsv check uuidd           Check the uuidd svc, wrapper for 'sv check uuidd'
     vsv restart sshd          Restart sshd, wrapper for 'sv restart sshd'
     vsv -u                    Show service status in ~/runit/service
