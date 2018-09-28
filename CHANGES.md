@@ -4,6 +4,8 @@ vsv Changes
 Not Yet Released
 ----------------
 
+- Add manpage
+
 `v1.2.0`
 --------
 

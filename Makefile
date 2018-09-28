@@ -4,6 +4,12 @@ PREFIX ?= /usr/local
 all:
 	@echo 'nothing to do'
 
+.PHONY: man
+man: man/vsv.8
+man/vsv.8: man/vsv.md
+	md2man-roff $^ > $@
+
+
 .PHONY: install
 install:
 	cp vsv $(PREFIX)/bin/vsv
