@@ -43,11 +43,13 @@ You can use the Makefile in this repo:
 
     $ sudo make install
     cp vsv /usr/local/bin
+    cp man/vsv.8 /usr/local/share/man/man8/vsv.8
 
 And uninstall with:
 
     $ sudo make uninstall
     rm -f /usr/local/bin/vsv
+    rm -f /usr/local/share/man/man8/vsv.8
 
 Examples
 --------
