@@ -9,6 +9,10 @@ man: man/vsv.8
 man/vsv.8: man/vsv.md
 	md2man-roff $^ > $@
 
+.PHONY: clean
+clean:
+	rm -f man/vsv.8
+
 .PHONY: install
 install:
 	cp vsv $(PREFIX)/bin/vsv
