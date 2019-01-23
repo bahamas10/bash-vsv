@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Void Liunx service manager (runit)
+# Void Linux service manager (runit)
 #
 # Author: Dave Eddy <dave@daveeddy.com>
 # Date: August 29, 2018
