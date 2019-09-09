@@ -299,6 +299,7 @@ process_service() {
 	# figure out program name
 	if [[ -n $pid ]]; then
 		IFS= read -d $'\0' -r prog _ < /proc/$pid/cmdline
+		prog=${prog##*/}
 	fi
 
 	# print service line
