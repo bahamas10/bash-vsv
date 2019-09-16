@@ -6,7 +6,7 @@
 # Date: August 29, 2018
 # License: MIT
 
-VSV_VERSION='v1.2.1'
+VSV_VERSION='v1.3.0'
 
 export SVDIR=${SVDIR:-/var/service}
 
@@ -140,6 +140,10 @@ status [-lt] [filter]    $cr Default subcommand, show process status
 			 $cr '-t' enables tree mode (process tree)
 			 $cr '-l' enables log mode (show log processes)
 			 $cr 'filter' is an optional string to match service names against
+${colorgreen}
+enable <svc> [...]       $cr Enable the service(s) (remove the "down" file, does not start service)
+${colorgreen}
+disable <svc> [...]      $cr Disable the service(s) (create the "down" file, does not stop service)
 
 Any other subcommand gets passed directly to the 'sv' command, see sv(1) for the
 full list of subcommands and information about what each does specifically.
@@ -212,6 +216,12 @@ rmsg() {
 	echo "$logo" "$statuscolor$*$colorreset"
 }
 
+disable_message() {
+	local svc=$1
+
+	echo "service $svc disabled by user $USER on $(date)"
+}
+
 # process the status of a single service
 process_service() {
 	local svc=$1
@@ -239,6 +249,7 @@ process_service() {
 
 		# if the service is enabled (wants up or wants down)
 		if [[ -e $svc/down ]]; then
+			verbose "service disabled: $(< $svc/down)"
 			enabled='false'
 		else
 			enabled='true'
@@ -406,6 +417,63 @@ do_status() {
 	echo
 }
 
+# handle the enable and disable subcommands
+do_enable_disable() {
+	local cmd=$1
+	local svc
+	local ret=0
+	local file
+	shift
+
+	if (($# < 1)); then
+		rmsg -1 "Argument expected for '$cmd'"
+		return 1
+	fi
+
+	# Loop all arguments as services
+	msg "Running $progname $cmd $*"
+
+	for svc in "$@"; do
+		# Validate service name
+		if ! [[ $svc =~ $svc_re ]]; then
+			rmsg -1 "unexpected characters in name: '$svc'" >&2
+			continue
+		fi
+
+		# ensure service exists
+		if ! [[ -d $svc ]]; then
+			rmsg -1 "service directory '$svc' does not exist" >&2
+			continue
+		fi
+
+		file=$svc/down
+
+		case "$cmd" in
+			enable)
+				verbose "enable '$svc': rm -f '$file'"
+				if ! rm -f "$file"; then
+					rmsg 1 "failed to enable '$svc'"
+					ret=1
+				fi
+				;;
+			disable)
+				verbose "disabling '$svc': creating '$file'"
+				if ! disable_message "$svc" > "$file"; then
+					rmsg 1 "failed to disable '$svc'"
+					ret=1
+				fi
+				;;
+			*)
+				rmsg 2 "unknown command: $cmd" >&2
+				return 2
+				;;
+		esac
+	done
+
+	rmsg "$ret" "[$progname $cmd $*], exit code: $ret"
+	return "$ret"
+}
+
 # handle any other subcommand
 do_sv_cmd() {
 	if (($# < 2)); then
@@ -459,6 +527,9 @@ fi
 case "$cmd" in
 	status)
 		do_status "$@"
+		;;
+	enable|disable)
+		do_enable_disable "$cmd" "$@"
 		;;
 	*)
 		if $tree; then

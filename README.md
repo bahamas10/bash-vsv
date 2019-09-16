@@ -137,6 +137,8 @@ Quick Examples:
 - `vsv stop <svc>` - stop a service
 - `vsv start <svc>` - start a service
 - `vsv restart <svc>` - restart a service
+- `vsv enable <svc>` - enable a service (autostart at boot)
+- `vsv disable <svc>` - disable a service (no autostart at boot)
 - `vsv hup <svc>` - refresh a service (`SIGHUP`)
 
 Status:
@@ -154,7 +156,7 @@ Command Usage:
 
     $ vsv -h
      __   _______   __
-     \ \ / / __\ \ / /   Void Service Manager (v1.0.0)
+     \ \ / / __\ \ / /   Void Service Manager (v1.3.0)
       \ V /\__ \\ V /    Source: https://github.com/bahamas10/vsv
        \_/ |___/ \_/     MIT License
 
@@ -170,6 +172,7 @@ Command Usage:
     -c <yes|no|auto>          Enable/disable color output, defaults to auto
     -d <dir>                  Directory to look into, defaults to env SVDIR or /var/service if unset
     -h                        Print this message and exit
+    -l                        Show log processes, this is a shortcut for 'status -l'
     -t                        Tree view, this is a shortcut for 'status -t'
     -u                        User mode, this is a shortcut for '-d ~/runit/service'
     -v                        Increase verbosity
@@ -180,9 +183,14 @@ Command Usage:
                               be overridden with '-d <dir>'
 
     SUBCOMMANDS:
-    status [-t] [filter]      Default subcommand, show process status
+    status [-lt] [filter]     Default subcommand, show process status
                               '-t' enables tree mode (process tree)
+                              '-l' enables log mode (show log processes)
                               'filter' is an optional string to match service names against
+
+    enable <svc> [...]        Enable the service(s) (remove the "down" file, does not start service)
+
+    disable <svc> [...]       Disable the service(s) (create the "down" file, does not stop service)
 
     Any other subcommand gets passed directly to the 'sv' command, see sv(1) for the
     full list of subcommands and information about what each does specifically.
@@ -198,7 +206,7 @@ Command Usage:
     vsv status                Same as above
     vsv -t                    Show service status + pstree output
     vsv status -t             Same as above
-    vsv status tty            Show service status for any service that matches *tty*
+    vsv status tty            Show service status for any service that matches tty*
     vsv check uuidd           Check the uuidd svc, wrapper for 'sv check uuidd'
     vsv restart sshd          Restart sshd, wrapper for 'sv restart sshd'
     vsv -u                    Show service status in ~/runit/service
