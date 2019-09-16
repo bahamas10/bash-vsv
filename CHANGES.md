@@ -4,6 +4,17 @@ vsv Changes
 Not Yet Released
 ----------------
 
+`v1.3.1`
+--------
+
+- Update manpage
+
+`v1.3.0`
+--------
+
+- [#1](https://github.com/bahamas10/vsv/pull/1) fix a typo (PR by @pltrz)
+- [#2](https://github.com/bahamas10/vsv/pull/2) Add support to enable/disable service (issue by @illiliti)
+
 `v1.2.1`
 --------
 
