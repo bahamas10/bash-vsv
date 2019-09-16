@@ -92,6 +92,14 @@ Common subcommands:
 
   Reload the service (send `SIGHUP`)
 
+`enable <service>`
+
+ Enable the service (remove the "down" file, does not start service)
+
+`disable <service>`
+
+ Disable the service (create the "down" file, does not stop service)
+
 EXAMPLES
 --------
 
@@ -111,7 +119,7 @@ EXAMPLES
 
   Same as above
 
-` vsv status tty`
+`vsv status tty`
 
   Show service status for any service that matches `tty`
 
