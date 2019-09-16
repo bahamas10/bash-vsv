@@ -6,7 +6,7 @@
 # Date: August 29, 2018
 # License: MIT
 
-VSV_VERSION='v1.3.0'
+VSV_VERSION='v1.3.1'
 
 export SVDIR=${SVDIR:-/var/service}
 
