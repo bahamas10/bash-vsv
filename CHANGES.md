@@ -4,6 +4,11 @@ vsv Changes
 Not Yet Released
 ----------------
 
+`v1.3.2`
+--------
+
+- Add license file (MIT)
+
 `v1.3.1`
 --------
 
