@@ -13,6 +13,10 @@ See my blog post on `vsv` here: https://www.daveeddy.com/2018/09/20/vsv-void-ser
 Installation
 ------------
 
+    xbps-install vsv
+
+---
+
 `vsv` is a standalone bash script that can be dumped anywhere in your `$PATH`
 to be used.
 
