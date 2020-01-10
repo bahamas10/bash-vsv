@@ -5,6 +5,7 @@ Not Yet Released
 ----------------
 
 - [#4](https://github.com/bahamas10/vsv/pull/4) Truncate command output to not overflow 17 characters (PR by @zdykstra)
+- [#6](https://github.com/bahamas10/vsv/issues/6) race condition when checking if a service is disabled
 
 `v1.3.2`
 --------
