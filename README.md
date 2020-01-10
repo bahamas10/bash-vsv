@@ -67,7 +67,7 @@ slightly in newer versions of `vsv`.
 Run `vsv` without any arguments to get process status.  This is equivalent to
 running `vsv status`:
 
-![vsv-normal.jpg](screenshots/vsv-normal.jpg)
+![vsv-status.jpg](screenshots/vsv-status.jpg)
 
 **Note:** `sudo` or escalated privileges are required to determine service state
 because of the strict permissions on each service's `supervise` directory.
