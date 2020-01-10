@@ -8,7 +8,7 @@ to `sv` as `vpm` is to the `xbps-*` commands.
 
 See my blog post on `vsv` here: https://www.daveeddy.com/2018/09/20/vsv-void-service-manager/
 
-![vsv-status.png](screenshots/vsv-status.png)
+![vsv-status.jpg](screenshots/vsv-status.jpg)
 
 Installation
 ------------
@@ -67,7 +67,7 @@ slightly in newer versions of `vsv`.
 Run `vsv` without any arguments to get process status.  This is equivalent to
 running `vsv status`:
 
-![vsv-normal.png](screenshots/vsv-normal.png)
+![vsv-normal.jpg](screenshots/vsv-normal.jpg)
 
 **Note:** `sudo` or escalated privileges are required to determine service state
 because of the strict permissions on each service's `supervise` directory.
@@ -77,62 +77,62 @@ setting the `$SVDIR` environmental variable or passing in a `-d <dir>` argument.
 Any service that has been in a state for less than 5 seconds will be marked
 in red, making new or failing services easy to spot:
 
-![vsv-add-service.png](screenshots/vsv-add-service.png)
+![vsv-add-service.jpg](screenshots/vsv-add-service.jpg)
 
 Services in a state for more than 5 seconds but less than 30 seconds will be
 highlighted in yellow:
 
-![vsv-service-status-yellow.png](screenshots/vsv-service-status-yellow.png)
+![vsv-service-status-yellow.jpg](screenshots/vsv-service-status-yellow.jpg)
 
 A string can be passed as the first argument after `status` to filter for
 services that contain that string in their name.  Also, `-t` can be supplied to
 `status` to print the process tree of the pid for that process:
 
-![vsv-arguments.png](screenshots/vsv-arguments.png)
+![vsv-arguments.jpg](screenshots/vsv-arguments.jpg)
 
 Any command other than `status` will be passed directly to the `sv` command.
 Restarting a service is as easy as `vsv restart <svc>`:
 
-![vsv-restart.png](screenshots/vsv-restart.png)
+![vsv-restart.jpg](screenshots/vsv-restart.jpg)
 
-To stop a service, `vsv down <svc>` can be used:
+To stop a service, `vsv down <svc>` or `vsv stop <svc>` can be used:
 
-![vsv-down.png](screenshots/vsv-down.png)
+![vsv-down.jpg](screenshots/vsv-down.jpg)
 
 A full service tree can be generated with `vsv -t`.  This command is equivalent
 to running `vsv status -t`:
 
-![vst-tree-large.png](screenshots/vst-tree-large.png)
+![vst-tree-large.jpg](screenshots/vst-tree-large.jpg)
 
 `-l` can be specified to view log services for each service as well.  This
 command is equivalent to running `vsv status -l virt`:
 
-![vsv-log.png](screenshots/vsv-log.png)
+![vsv-log.jpg](screenshots/vsv-log.jpg)
 
 `-t` can be specified with `-l` to view log services as a tree for each service
 as well as normal services.  This command is equivalent to running `vsv status
 -tl virt`:
 
-![vsv-log-tree.png](screenshots/vsv-log-tree.png)
+![vsv-log-tree.jpg](screenshots/vsv-log-tree.jpg)
 
 `vsv` also first-classes the notion of "user services".  I wrote about this in
 my blog post for [Using Linux As My Daily
 Driver](https://www.daveeddy.com/2018/09/15/using-void-linux-as-my-daily-driver/)
 Basically, I have a separate instance of `runsvdir` running as my user out of
-`~/runit/sv`, and the `vsv` script is set up to look in that location when
+`~/runit/service`, and the `vsv` script is set up to look in that location when
 invoked with `-u`.
 
-![vsv-user-u.png](screenshots/vsv-user-u.png)
+![vsv-user-u.jpg](screenshots/vsv-user-u.jpg)
 
-Note that `-u` is just a shortcut for `-d ~/runit/sv` - technically, any
+Note that `-u` is just a shortcut for `-d ~/runit/service` - technically, any
 directory can be specified with that option:
 
-![vsv-user-d.png](screenshots/vsv-user-d.png)
+![vsv-user-d.jpg](screenshots/vsv-user-d.jpg)
 
 All of the commands and options are supported when `-u` or `-d <dir>` is
 specified.
 
-![vsv-user-tree.png](screenshots/vsv-user-tree.png)
+![vsv-user-log.jpg](screenshots/vsv-user-log.jpg)
 
 Usage
 -----
