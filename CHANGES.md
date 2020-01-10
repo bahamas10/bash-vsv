@@ -4,6 +4,8 @@ vsv Changes
 Not Yet Released
 ----------------
 
+- [#4](https://github.com/bahamas10/vsv/pull/4) Truncate command output to not overflow 17 characters (PR by @zdykstra)
+
 `v1.3.2`
 --------
 
