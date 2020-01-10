@@ -227,7 +227,7 @@ process_service() {
 	local svc=$1
 	local now=$2
 	local pid when up msg char err enabled msgcolor enabledcolor \
-	    statecolor code islog prog
+	    statecolor code islog prog down
 
 	islog=false
 	if [[ $svc == */log ]]; then
@@ -248,8 +248,8 @@ process_service() {
 		msg=$(human "$up")
 
 		# if the service is enabled (wants up or wants down)
-		if [[ -e $svc/down ]]; then
-			verbose "service disabled: $(< $svc/down)"
+		if down=$(cat "$svc/down" 2>&1); then
+			verbose "service disabled: $down"
 			enabled='false'
 		else
 			enabled='true'
