@@ -54,7 +54,6 @@ human() {
 # setcolors on   # colors on
 # setcolors off  # colors off
 # setcolors auto # colors on or off depending on environment
-_colorsSet=false
 setcolors() {
 	local opt=$1
 
@@ -98,7 +97,6 @@ setcolors() {
 			exit 1
 			;;
 	esac
-	_colorsSet=true
 }
 
 usage() {
@@ -489,13 +487,14 @@ do_sv_cmd() {
 	return "$ret"
 }
 
+colors_set=false
 tree=false
 log=false
 do_usage=-1
 verbosity=0
 while getopts 'c:d:hltuvV' option; do
 	case "$option" in
-		c) setcolors "$OPTARG";;
+		c) setcolors "$OPTARG"; colors_set=true;;
 		d) SVDIR=$OPTARG;;
 		h) do_usage=0;;
 		l) log=true; cmd='status';;
@@ -508,7 +507,7 @@ while getopts 'c:d:hltuvV' option; do
 done
 shift "$((OPTIND - 1))"
 
-$_colorsSet || setcolors auto
+$colors_set || setcolors auto
 
 # we wait until the colors are optionally set to output the usage message
 if ((do_usage > -1)); then
