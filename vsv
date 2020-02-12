@@ -56,15 +56,24 @@ human() {
 # setcolors auto # colors on or off depending on environment
 setcolors() {
 	local opt=$1
+	local colors
 
-	# determine if colors should be enabled or not
 	if [[ $opt == auto ]]; then
-		# if stdout is a TTY and the TERM looks like it supports color
-		# enable colors
-		if [[ -t 1 && $TERM == *color* ]]; then
-			opt='on'
-		else
+		# no colors if stdout is not a TTY
+		if [[ ! -t 1 ]]; then
 			opt='off'
+		else
+			# stdout is a tty, check tput capability for colors
+			colors=$(tput colors 2>/dev/null || echo -1)
+			if ! [[ $colors =~ $num_re ]]; then
+				fatal "failed to parse output of \`tput colors\` ($colors)"
+			fi
+
+			if ((colors >= 8)); then
+				opt='on'
+			else
+				opt='off'
+			fi
 		fi
 	fi
 
