@@ -6,6 +6,11 @@ Not Yet Released
 
 (nothing yet)
 
+`v1.3.4`
+--------
+
+- [#8](https://github.com/bahamas10/vsv/issues/8) better detect terminals with color support
+
 `v1.3.3`
 --------
 
