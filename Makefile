@@ -15,8 +15,8 @@ clean:
 
 .PHONY: install
 install:
-	cp vsv $(PREFIX)/bin/vsv
-	cp man/vsv.8 $(PREFIX)/share/man/man8/vsv.8
+	install -DTm755 vsv $(PREFIX)/bin/vsv
+	install -DTm644 man/vsv.8 $(PREFIX)/share/man/man8/vsv.8
 
 .PHONY: uninstall
 uninstall:
