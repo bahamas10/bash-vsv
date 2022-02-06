@@ -102,7 +102,7 @@ To stop a service, `vsv down <svc>` or `vsv stop <svc>` can be used:
 A full service tree can be generated with `vsv -t`.  This command is equivalent
 to running `vsv status -t`:
 
-![vst-tree-large.jpg](screenshots/vst-tree-large.jpg)
+![vsv-tree-large.jpg](screenshots/vsv-tree-large.jpg)
 
 `-l` can be specified to view log services for each service as well.  This
 command is equivalent to running `vsv status -l virt`:
