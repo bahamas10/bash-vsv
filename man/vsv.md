@@ -1,4 +1,4 @@
-VSV 8 "SEP 2018" "System Manager's Utilities"
+VSV 8 "FEB 2022" "System Manager's Utilities"
 =============================================
 
 NAME
@@ -24,35 +24,49 @@ OPTIONS
 -------
 
 `-c <yes|no|auto>`
-  Enable/disable color output, defaults to auto
+  Enable/disable color output, defaults to auto.
 
 `-d` *dir*
-  Directory to look into, defaults to env `SVDIR` or `/var/service` if unset
+  Directory to look into, defaults to env `SVDIR` or `/var/service` if unset.
 
 `-h`
-  Print this message and exit
+  Print this message and exit.
 
 `-l`
-  Show log processes, this is a shortcut for `vsv status -l`
+  Show log processes, this is a shortcut for `vsv status -l`.
 
 `-t`
-  Tree view, this is a shortcut for `vsv status -t`
+  Tree view, this is a shortcut for `vsv status -t`.
 
 `-u`
-  User mode, this is a shortcut for `vsv -d ~/runit/service`
+  User mode, this is a shortcut for `vsv -d ~/runit/service`.
 
 `-v`
-  Increase verbosity
+  Increase verbosity.
 
 `-V`
-  Print the version number and exit
+  Print the version number and exit.
 
 ENVIRONMENT
 -----------
 
 `SVDIR`
   The directory to use, passed to the `sv` command, can be overridden with `-d
-  <dir>`
+  <dir>`.
+
+`PROC_DIR`
+  A Linux procfs directory to use for command name lookups, defaults to `/proc`.
+
+`SV_PROG`
+  The command to use for any "external" subcommand given to `vsv`, defaults to
+  `sv`.
+
+`PSTREE_PROG`
+  The command to use to get a process tree for a given pid, defaults to
+  `pstree`.
+
+`NO_COLOR`
+  Set this environmental variable to disable color output.
 
 SUBCOMMANDS
 -----------

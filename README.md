@@ -1,73 +1,42 @@
+![vsv-logo](assets/vsv-banner.jpg)
+
 `vsv` - Void Service Manager
 ============================
 
 Manage and view runit services.
 
-`vsv` was inspired by [`vpm`](https://github.com/netzverweigerer/vpm).  `vsv` is
-to `sv` as `vpm` is to the `xbps-*` commands.
-
-See my blog post on `vsv` here: https://www.daveeddy.com/2018/09/20/vsv-void-service-manager/
-
-![vsv-status.jpg](screenshots/vsv-status.jpg)
+`vsv` was inspired by [`vpm`][vpm].  `vsv` is to `sv` as `vpm` is to the
+`xbps-*` commands.
 
 Installation
 ------------
 
-On [Void Linux](https://voidlinux.org/) run:
+### `xbps`
+
+On [Void Linux][void] run:
 
     xbps-install vsv
 
-Alternative Installation
-------------------------
+### Manually
 
-`vsv` is a standalone bash script that can be dumped anywhere in your `$PATH`
-to be used.
-
-### `git`
-
-I personally install it with `git` (with `~/bin` in my `$PATH`):
-
-    mkdir -p ~/bin ~/dev
-    cd ~/dev
     git clone git://github.com/bahamas10/vsv.git
-    ln -s ~/dev/vsv/vsv ~/bin
+    cd vsv
+    cargo build --release
+    ./target/release/vsv -V
 
-### `curl` or `wget`
+Bash Version
+------------
 
-You can use `curl` or `wget` to pull the script directly from GitHub:
-
-    mkdir -p ~/bin
-    cd ~/bin
-    wget https://raw.githubusercontent.com/bahamas10/vsv/master/vsv
-    # or
-    curl -O https://raw.githubusercontent.com/bahamas10/vsv/master/vsv
-    # and then
-    chmod +x ~/bin/vsv
-
-### `Makefile`
-
-You can use the Makefile in this repo:
-
-    $ sudo make install
-    cp vsv /usr/local/bin
-    cp man/vsv.8 /usr/local/share/man/man8/vsv.8
-
-And uninstall with:
-
-    $ sudo make uninstall
-    rm -f /usr/local/bin/vsv
-    rm -f /usr/local/share/man/man8/vsv.8
+For `v2.0.0` this software was rewritten from Bash to Rust.  The Bash version is
+still available in this repo in the `old/` directory for those that want it.
 
 Examples
 --------
 
-**Note:** Some screenshots are outdated or command output may have changed
-slightly in newer versions of `vsv`.
-
 Run `vsv` without any arguments to get process status.  This is equivalent to
 running `vsv status`:
 
-![vsv-status.jpg](screenshots/vsv-status.jpg)
+<img alt="vsv-status" src="assets/vsv-status.jpg" width="600" />
 
 **Note:** `sudo` or escalated privileges are required to determine service state
 because of the strict permissions on each service's `supervise` directory.
@@ -75,64 +44,45 @@ because of the strict permissions on each service's `supervise` directory.
 `vsv` scans the `/var/service` directory by default, which can be overridden by
 setting the `$SVDIR` environmental variable or passing in a `-d <dir>` argument.
 Any service that has been in a state for less than 5 seconds will be marked
-in red, making new or failing services easy to spot:
+in red and any less than 30 seconds will be marked in yellow, making new or
+failing services easy to spot:
 
-![vsv-add-service.jpg](screenshots/vsv-add-service.jpg)
+<img alt="vsv-add-service.jpg" src="assets/vsv-add-service.jpg" width="600" />
 
-Services in a state for more than 5 seconds but less than 30 seconds will be
-highlighted in yellow:
+We can isolate the service by passing it as a "filter" to `status`.
 
-![vsv-service-status-yellow.jpg](screenshots/vsv-service-status-yellow.jpg)
+<img alt="vsv-filter.jpg" src="assets/vsv-filter.jpg" width="600" />
 
 A string can be passed as the first argument after `status` to filter for
 services that contain that string in their name.  Also, `-t` can be supplied to
 `status` to print the process tree of the pid for that process:
 
-![vsv-arguments.jpg](screenshots/vsv-arguments.jpg)
+<img alt="vsv-arguments.jpg" src="assets/vsv-arguments.jpg" width="600" />
 
 Any command other than `status` will be passed directly to the `sv` command.
 Restarting a service is as easy as `vsv restart <svc>`:
 
-![vsv-restart.jpg](screenshots/vsv-restart.jpg)
+<img alt="vsv-restart.jpg" src="assets/vsv-restart.jpg" width="600" />
 
 To stop a service, `vsv down <svc>` or `vsv stop <svc>` can be used:
 
-![vsv-down.jpg](screenshots/vsv-down.jpg)
+<img alt="vsv-down.jpg" src="assets/vsv-down.jpg" width="600" />
 
 A full service tree can be generated with `vsv -t`.  This command is equivalent
 to running `vsv status -t`:
 
-![vsv-tree-large.jpg](screenshots/vsv-tree-large.jpg)
+<img alt="vsv-tree.jpg" src="assets/vsv-tree.jpg" width="600" />
 
 `-l` can be specified to view log services for each service as well.  This
 command is equivalent to running `vsv status -l virt`:
 
-![vsv-log.jpg](screenshots/vsv-log.jpg)
+<img alt="vsv-log.jpg" src="assets/vsv-log.jpg" width="600" />
 
 `-t` can be specified with `-l` to view log services as a tree for each service
 as well as normal services.  This command is equivalent to running `vsv status
 -tl virt`:
 
-![vsv-log-tree.jpg](screenshots/vsv-log-tree.jpg)
-
-`vsv` also first-classes the notion of "user services".  I wrote about this in
-my blog post for [Using Linux As My Daily
-Driver](https://www.daveeddy.com/2018/09/15/using-void-linux-as-my-daily-driver/)
-Basically, I have a separate instance of `runsvdir` running as my user out of
-`~/runit/service`, and the `vsv` script is set up to look in that location when
-invoked with `-u`.
-
-![vsv-user-u.jpg](screenshots/vsv-user-u.jpg)
-
-Note that `-u` is just a shortcut for `-d ~/runit/service` - technically, any
-directory can be specified with that option:
-
-![vsv-user-d.jpg](screenshots/vsv-user-d.jpg)
-
-All of the commands and options are supported when `-u` or `-d <dir>` is
-specified.
-
-![vsv-user-log.jpg](screenshots/vsv-user-log.jpg)
+<img alt="vsv-log-tree.jpg" src="assets/vsv-log-tree.jpg" width="600" />
 
 Usage
 -----
@@ -163,76 +113,92 @@ Command Usage:
 
     $ vsv -h
      __   _______   __
-     \ \ / / __\ \ / /   Void Service Manager (v1.3.0)
+     \ \ / / __\ \ / /   Void Service Manager
       \ V /\__ \\ V /    Source: https://github.com/bahamas10/vsv
        \_/ |___/ \_/     MIT License
+       -------------
+        Manage and view runit services
+        Made specifically for Void Linux but should work anywhere
+        Author: Dave Eddy <dave@daveeddy.com> (bahamas10)
 
-    [vsv]    Manage and view runit services
-    [vsv]    Made specifically for Void Linux but should work anywhere
-    [vsv]    Author: Dave Eddy <dave@daveeddy.com> (bahamas10)
+    vsv 2.0.0
+    Runit service manager CLI
 
     USAGE:
-    vsv [OPTIONS] [SUBCOMMAND] [<ARGS>]
-    vsv [-u] [-d <dir>] [-h] [-t] [SUBCOMMAND] [...]
+        vsv [OPTIONS] [SUBCOMMAND]
 
     OPTIONS:
-    -c <yes|no|auto>          Enable/disable color output, defaults to auto
-    -d <dir>                  Directory to look into, defaults to env SVDIR or /var/service if unset
-    -h                        Print this message and exit
-    -l                        Show log processes, this is a shortcut for 'status -l'
-    -t                        Tree view, this is a shortcut for 'status -t'
-    -u                        User mode, this is a shortcut for '-d ~/runit/service'
-    -v                        Increase verbosity
-    -V                        Print the version number and exit
-
-    ENV:
-    SVDIR                     The directory to use, passed to the 'sv' command, can
-                              be overridden with '-d <dir>'
+        -c, --color <yes|no|auto>    Enable or disable color output
+        -d, --dir <dir>              Directory to look into, defaults to env SVDIR or /var/service if
+                                     unset
+        -h, --help                   Print help information
+        -l, --log                    Show log processes, this is a shortcut for `status -l`
+        -t, --tree                   Tree view, this is a shortcut for `status -t`
+        -u, --user                   User mode, this is a shortcut for `-d ~/runit/service`
+        -v, --verbose                Increase Verbosity
+        -V, --version                Print version information
 
     SUBCOMMANDS:
-    status [-lt] [filter]     Default subcommand, show process status
-                              '-t' enables tree mode (process tree)
-                              '-l' enables log mode (show log processes)
-                              'filter' is an optional string to match service names against
+        disable    Disable service(s)
+        enable     Enable service(s)
+        help       Print this message or the help of the given subcommand(s)
+        status     Show process status
 
-    enable <svc> [...]        Enable the service(s) (remove the "down" file, does not start service)
-
-    disable <svc> [...]       Disable the service(s) (create the "down" file, does not stop service)
-
-    Any other subcommand gets passed directly to the 'sv' command, see sv(1) for the
-    full list of subcommands and information about what each does specifically.
+    Any other subcommand gets passed directly to the 'sv' command, see sv(1) for
+    the full list of subcommands and information about what each does specifically.
     Common subcommands:
 
-    start <service>           Start the service
-    stop <service>            Stop the service
-    restart <service>         Restart the service
-    reload <service>          Reload the service (send SIGHUP)
+        start <service>           Start the service
+        stop <service>            Stop the service
+        restart <service>         Restart the service
+        reload <service>          Reload the service (send SIGHUP)
 
-    EXAMPLES:
-    vsv                       Show service status in /var/service
-    vsv status                Same as above
-    vsv -t                    Show service status + pstree output
-    vsv status -t             Same as above
-    vsv status tty            Show service status for any service that matches tty*
-    vsv check uuidd           Check the uuidd svc, wrapper for 'sv check uuidd'
-    vsv restart sshd          Restart sshd, wrapper for 'sv restart sshd'
-    vsv -u                    Show service status in ~/runit/service
-    vsv -u restart ssh-agent  Restart ssh-agent in ~/runit/service/ssh-agent
+Environmental Variables:
+
+- `SVDIR`: The directory to use, passed to the `sv` command, can be overridden
+  with `-d <dir>`.
+- `PROC_DIR`: A Linux procfs directory to use for command name lookups, defaults
+  to `/proc`.
+- `SV_PROG`: The command to use for any "external" subcommand given to `vsv`,
+  defaults to `sv`.
+- `PSTREE_PROG`: The command to use to get a process tree for a given pid,
+  defaults to `pstree`.
+- `NO_COLOR`: Set this environmental variable to disable color output.
+
+Manpage
+-------
+
+This software comes with a manpage generated via the ruby package `md2man`.
+This software is required to generate a new manpage and can be installed with:
+
+    gem install --user-install md2man
+
+Then the manpage can be generated with:
+
+    $ make man
+    md2man-roff man/vsv.md > man/vsv.8
 
 Syntax
 ------
 
-This project uses:
-
-- Bash Style Guide: https://www.daveeddy.com/bash/
-- `shellcheck`: https://github.com/koalaman/shellcheck
+All source code should be clean of `cargo clippy` and `cargo fmt`.  You can use
+`make` to ensure this:
 
 ```
 $ make check
-shellcheck vsv
+cargo check
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+cargo clippy
+    Finished dev [unoptimized + debuginfo] target(s) in 0.12s
+$ make fmt
+cargo fmt
 ```
 
 License
 -------
 
 MIT License
+
+[vpm]: https://github.com/netzverweigerer/vpm
+[vsv]: https://github.com/bahamas10/vsv
+[void]: https://voidlinux.org/

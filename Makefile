@@ -1,5 +1,3 @@
-PREFIX ?= /usr/local
-
 .PHONY: all
 all:
 	@echo 'nothing to do'
@@ -13,16 +11,23 @@ man/vsv.8: man/vsv.md
 clean:
 	rm -f man/vsv.8
 
-.PHONY: install
-install:
-	install -DTm755 vsv $(PREFIX)/bin/vsv
-	install -DTm644 man/vsv.8 $(PREFIX)/share/man/man8/vsv.8
-
-.PHONY: uninstall
-uninstall:
-	rm -f $(PREFIX)/bin/vsv
-	rm -f $(PREFIX)/share/man/man8/vsv.8
-
 .PHONY: check
 check:
-	shellcheck vsv
+	cargo check
+	cargo clippy
+
+.PHONY: fmt
+fmt:
+	cargo fmt
+
+.PHONY: test
+test:
+	cargo test
+
+.PHONY: test-basic
+test-basic:
+	cargo test --test basic
+
+.PHONY: test-integration
+test-integration:
+	cargo test --test integration
