@@ -6,6 +6,11 @@ Not Yet Released
 
 (nothing yet)
 
+`v2.0.0`
+--------
+
+- Software completely rewritten in rust - feature parity with `v1.3.4`
+
 `v1.3.4`
 --------
 

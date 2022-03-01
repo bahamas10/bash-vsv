@@ -3,16 +3,30 @@
 
 Manage and view runit services.
 
-**Note:** This is a rewrite in Rust of [`vsv`][vsv] which was originally written
-in Bash.
-
 `vsv` was inspired by [`vpm`][vpm].  `vsv` is to `sv` as `vpm` is to the
 `xbps-*` commands.
 
 Installation
 ------------
 
-(todo)
+### `xbps`
+
+On [Void Linux][void] run:
+
+    xbps-install vsv
+
+### Manually
+
+    git clone git://github.com/bahamas10/vsv.git
+    cd vsv
+    cargo build --release
+    ./target/release/vsv -V
+
+Bash Version
+------------
+
+For `v2.0.0` this software was rewritten from Bash to Rust.  The Bash version is
+still available in this repo in the `old/` directory for those that want it.
 
 Examples
 --------
@@ -149,6 +163,19 @@ Environmental Variables:
   defaults to `pstree`.
 - `NO_COLOR`: Set this environmental variable to disable color output.
 
+Manpage
+-------
+
+This software comes with a manpage generated via the ruby package `md2man`.
+This software is required to generate a new manpage and can be installed with:
+
+    gem install --user-install md2man
+
+Then the manpage can be generated with:
+
+    $ make man
+    md2man-roff man/vsv.md > man/vsv.8
+
 Syntax
 ------
 
@@ -172,3 +199,4 @@ MIT License
 
 [vpm]: https://github.com/netzverweigerer/vpm
 [vsv]: https://github.com/bahamas10/vsv
+[void]: https://voidlinux.org/
