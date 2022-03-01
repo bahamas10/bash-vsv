@@ -9,6 +9,9 @@
 VSV_VERSION='v1.3.4'
 
 export SVDIR=${SVDIR:-/var/service}
+PROC_DIR=${PROC_DIR:-/proc}
+SV_PROG=${SV_PROG:-sv}
+PSTREE_PROG=${PSTREE_PROG:-pstree}
 
 charup='✔'
 chardown='X'
@@ -316,7 +319,7 @@ process_service() {
 
 	# figure out program name
 	if [[ -n $pid ]]; then
-		IFS= read -d $'\0' -r prog _ < /proc/$pid/cmdline
+		IFS= read -d $'\0' -r prog _ < "$PROC_DIR/$pid/cmdline"
 		prog=${prog##*/}
 		prog=${prog:0:17}
 	fi
@@ -335,7 +338,7 @@ process_service() {
 	if $tree; then
 		if [[ -n $pid ]] && ((pid > 0)); then
 			echo "$colorgray"
-			pstree -ac "$pid"
+			"$PSTREE_PROG" -ac "$pid"
 		fi
 		echo "$colorreset"
 	fi
@@ -489,10 +492,10 @@ do_sv_cmd() {
 		return 1
 	fi
 
-	msg "Running sv command (SVDIR=$SVDIR sv $*):"
-	sv "$@"
+	msg "Running $SV_PROG command (SVDIR=$SVDIR $SV_PROG $*):"
+	"$SV_PROG" "$@"
 	local ret=$?
-	rmsg "$ret" "[sv $*], exit code: $ret"
+	rmsg "$ret" "[$SV_PROG $*], exit code: $ret"
 	return "$ret"
 }
 
