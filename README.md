@@ -1,3 +1,5 @@
+![vsv-logo](assets/vsv-banner.jpg)
+
 `vsv` - Void Service Manager
 ============================
 
