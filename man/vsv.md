@@ -156,7 +156,7 @@ EXAMPLES
 BUGS
 ----
 
-https://github.com/bahamas10/rust-vsv
+https://github.com/bahamas10/vsv
 
 AUTHOR
 ------

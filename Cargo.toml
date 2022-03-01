@@ -3,7 +3,7 @@ name = "vsv"
 version = "2.0.0"
 description = "Runit service manager CLI"
 edition = "2021"
-repository = "https://github.com/bahamas10/rust-vsv"
+repository = "https://github.com/bahamas10/vsv"
 license = "MIT License"
 exclude = ["/assets", "/old"]
 
