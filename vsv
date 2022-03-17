@@ -15,7 +15,7 @@ chardown='X'
 charunknown='?'
 progname=${0##*/}
 num_re='^-?[0-9]+$'
-svc_re='^[a-zA-Z0-9_\.-]+$'
+svc_re='^[a-zA-Z0-9_@\.-]+$'
 
 shopt -s nullglob
 
