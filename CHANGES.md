@@ -6,6 +6,11 @@ Not Yet Released
 
 (nothing yet)
 
+`v1.3.5`
+--------
+
+- [#16](https://github.com/bahamas10/vsv/pull/16) loosen-up defensive service name validation logic to allow "@" chars
+
 `v1.3.4`
 --------
 
