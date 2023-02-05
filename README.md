@@ -1,6 +1,14 @@
 `vsv` - Void Service Manager
 ============================
 
+# DEPRECATION NOTICE
+
+This script has been deprecated as it has been rewritten in Rust
+
+https://github.com/bahamas10/vsv
+
+---
+
 Manage and view runit services.
 
 `vsv` was inspired by [`vpm`](https://github.com/netzverweigerer/vpm).  `vsv` is
